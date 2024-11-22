@@ -63,6 +63,7 @@ class DataLoader:
         self.column_4 = []
         self.column_5 = []  # red social
         self.last_two_columns = []
+        self.red_dict = { 1: "Facebook", 2: "Twitter", 3: "Instagram", 4: "TikTok", 5: "YouTube"}
         self._load_data()
 
     def _load_data(self):
