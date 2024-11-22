@@ -1,3 +1,5 @@
+![image](resources/espana.png)  ![image](resources/prtr.png)
+
 # FAKEnHATE-clef
 Code used for the project FAKEnHATE-PdC for Hate Speech Detection in multimodal scenarios
 
