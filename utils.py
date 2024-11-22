@@ -2,6 +2,7 @@ import torch
 from torch import nn, cuda
 import pandas as pd
 import numpy as np
+import csv
 from transformers import RobertaTokenizer, RobertaModel
 
 class HateSpeech_Dataset(Dataset):
@@ -54,3 +55,72 @@ class RobertaClassifier(nn.Module):
     output = self.linear(pooler)
 
     return output
+
+class DataLoader:
+    def __init__(self, csv_file_path):
+        self.csv_file_path = csv_file_path
+        self.column_3 = []
+        self.column_4 = []
+        self.column_5 = []  # red social
+        self.last_two_columns = []
+        self._load_data()
+
+    def _load_data(self):
+        """Private method to load data from the CSV file."""
+        with open(self.csv_file_path, 'r') as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=";")
+            for row_count, row in enumerate(csv_reader):
+                if row_count == 0:
+                    continue  # Skip the header
+                if len(row) >= 4:
+                    self.column_3.append(row[2])  # Text input
+                    self.column_4.append(row[3])  # Image input
+                    self.column_5.append(row[4])  # Social network
+                    self.last_two_columns.append(row[-2:])
+                else:
+                    print(f"Skipping row with insufficient columns: {row}")
+
+    def get_data(self, input_type="text", label_column="DISCRIM"):
+        """
+        Returns the features (X) and labels (y).
+        
+        Parameters:
+        - input_type (str): "text" for textual input or "image" for image input.
+        - label_column (str): "VIOLEN" for violence label, 
+                              "DISCRIM" for discrimination label,
+                              "SOURCE" for classifying the information source.
+        
+        Returns:
+        - X (list): The feature data.
+        - y (numpy array): The label data.
+        """
+        if input_type == "text":
+            X = self.column_3
+        elif input_type == "image":
+            X = self.column_4
+        else:
+            raise ValueError("Invalid input_type. Choose 'text' or 'image'.")
+
+        if label_column == "VIOLEN":
+            y = np.array([int(row[0][0]) for row in self.last_two_columns])
+        elif label_column == "DISCRIM":
+            y = np.array([int(row[1][0]) for row in self.last_two_columns])
+        elif label_column == "SOURCE":
+            y = np.array([int(elem) for elem in self.column_5]) - 1
+        else:
+            raise ValueError("Invalid label_column. Choose 'VIOLEN', 'DISCRIM', or 'source'.")
+
+        return X, y
+
+    def get_unique_values_and_counts(self, y):
+        """
+        Returns the unique values and their counts in the label array.
+        
+        Parameters:
+        - y (numpy array): The label data.
+        
+        Returns:
+        - unique_values (numpy array): Unique values in the label array.
+        - counts (numpy array): Counts of each unique value.
+        """
+        return np.unique(y, return_counts=True)
